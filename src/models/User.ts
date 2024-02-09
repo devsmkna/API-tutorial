@@ -5,7 +5,8 @@ type User = {
     email: string,
     password: string,
     verifyed: boolean,
-    token: string
+    verificationCode?: string,
+    avatar?: string
 }
 
 const userSchema = new Schema<User>({
@@ -15,7 +16,8 @@ const userSchema = new Schema<User>({
     },
     email: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     password: {
         type: String,
@@ -23,9 +25,13 @@ const userSchema = new Schema<User>({
     },
     verifyed: {
         type: Boolean,
+        required: true,
         default: false
     },
-    token: {
+    verificationCode: {
+        type: String
+    },
+    avatar: {
         type: String
     }
 });
