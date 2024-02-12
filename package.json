@@ -5,27 +5,35 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "start": "npm run build && node ./build/index.js"
+    "test": "set NODE_ENV=test && npm run build && mocha build/tests/* -timeout=10000",
+    "start": "set NODE_ENV=stage && npm run build && node build/index.js",
+    "start:cloud": "set NODE_ENV=cloud && npm run build && node build/index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.1.1",
+    "chai": "^5.0.3",
     "dotenv": "^16.4.1",
     "express": "^4.18.2",
     "express-validator": "^7.0.1",
     "jsonwebtoken": "^9.0.2",
+    "mocha": "^10.3.0",
     "mongoose": "^8.1.1",
+    "supertest": "^6.3.4",
     "typescript": "^5.3.3"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
+    "@types/chai": "^4.3.11",
     "@types/dotenv": "^8.2.0",
     "@types/express": "^4.17.21",
     "@types/express-validator": "^3.0.0",
     "@types/jsonwebtoken": "^9.0.5",
+    "@types/mocha": "^10.0.6",
     "@types/mongoose": "^5.11.97",
+    "@types/supertest": "^6.0.2",
     "@types/uuid": "^9.0.8",
     "uuid": "^9.0.1"
   }

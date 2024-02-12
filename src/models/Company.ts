@@ -37,4 +37,4 @@ const companySchema = new Schema<Company>({
     }
 });
 
-export const Company = model<Company>("Company", companySchema);
+export const Company = model<Company>("Companies", companySchema);

@@ -28,16 +28,16 @@ router.post(
             password: userData.password,
             verifyed: false,
         });
-        if (user.verifyed) return res.status(409).json({ message: "User already exists"} );
+        if (user.verifyed) return res.status(409).json({ message: "User already exists" });
         try {
             user.verificationCode = v4();
             await user.save();
-            return res.json({
+            return res.status(201).json({
                 message: "User created, check your email to verify your account.",
-                link: `http://localhost:3000/auth/verify/${user.verificationCode}`
+                id: user.id
             });
         } catch (e) {
-            return res.status(409).json({message: e});
+            return res.status(400).json({message: e});
         }
     }
 )
@@ -49,11 +49,14 @@ router.get(
     checkValidation,
     async (req: Request, res: Response) => {
         const user = await User.findOne({ verificationCode: req.params.id });
-        if (!user) return res.status(404).json({ message: "User not found"} );
+        if (!user) return res.status(404).json({ message: "User not found" });
         user.verifyed = true;
         user.verificationCode = undefined;
         await user.save();
-        res.json({ message: "User verified"} );
+        res.json({
+            message: "User verified",
+            id: user.id
+        });
     }
 )
 
@@ -67,7 +70,7 @@ router.post(
         const user = matchedData(req);
         const foundUser = await User.findOne({ email: user.email, verifyed: true });
         if (!foundUser || !bcrypt.compareSync(user.password, foundUser.password)) {
-            return res.status(400).json({ message: "Invalid credential"} );
+            return res.status(400).json({ message: "Invalid credential" });
         }
         res.json({
             message: "User logged in",
@@ -96,7 +99,7 @@ router.patch(
         const userData = matchedData(req);
         console.log(userData);
         const user = await User.findOneAndUpdate({ email: res.locals.user.email }, userData);
-        if (!user) return res.status(404).json({ message: "User not found"} );
+        if (!user) return res.status(404).json({ message: "User not found" });
         res.json({
             message: "User updated",
             token: jwt.sign({ email: user.email, name: user.name, avatar: user.avatar }, process.env.JWT_SECRET as string)
