@@ -25,7 +25,7 @@ router.post(
         const user = await User.findOne({ email: userData.email }) || new User({
             name: userData.name,
             email: userData.email,
-            password: userData.password,
+            password: bcrypt.hashSync(userData.password, salt),
             verifyed: false,
         });
         if (user.verifyed) return res.status(409).json({ message: "User already exists" });
@@ -97,7 +97,6 @@ router.patch(
     auth,
     async (req: Request, res: Response) => {
         const userData = matchedData(req);
-        console.log(userData);
         const user = await User.findOneAndUpdate({ email: res.locals.user.email }, userData);
         if (!user) return res.status(404).json({ message: "User not found" });
         res.json({

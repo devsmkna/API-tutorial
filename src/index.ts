@@ -16,16 +16,21 @@ app.use(express.json());
 // port
 const PORT = 3000;
 
-// Connect to MongoDB Atlas
-mongoose.connect(process.env.DB_URL as string)
-    .then(() => console.log("Connected to MongoDB Atlas"))
-    .catch((e) => console.log(`Could not connect to MongoDB Atlas: ${e}`));
-
 // Setup routes
 app.use("/companies", companies);
 app.use("/auth", auth);
 
-// Start server
-app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+
+const run = async () => {
+    // Connect to MongoDB Atlas
+    await mongoose.connect(process.env.DB_URL as string)
+        .then(() => console.log("Connected to MongoDB Atlas"))
+        .catch((err) => console.log(`Could not connect to MongoDB Atlas: ${err}`));
+    
+    // Start server
+    app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+}
+
+run();
 
 export default app;

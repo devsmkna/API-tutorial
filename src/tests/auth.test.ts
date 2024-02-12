@@ -5,10 +5,10 @@ import assert from "assert";
 
 describe("Testing Auth Signup", () => {
     let idUser: string;
-    after("Delete user after test", () => {
-        User.findByIdAndDelete(idUser);
+    afterEach("Delete user after test", async () => {
+        await User.findByIdAndDelete(idUser);
     });
-    it("Testing Signup", async () => {
+    it("Testing 200 Successful signup", async () => {
         const response = await request(app)
             .post("/auth/signup")
             .send({
@@ -16,11 +16,11 @@ describe("Testing Auth Signup", () => {
                 email: "devsmachna@email.com",
                 password: "{StrongPassword1}"
             });
-        assert.equal(response.status, 201);
-        assert.equal(typeof response.body.id, typeof "string");
+        assert.equal(response.status, 201, "User not created");
+        assert.equal(typeof response.body.id, typeof "string", "User ID not a string");
         idUser = response.body.id;
     });
-    it("Testing 400 Missing Email", async () => {
+    it("Testing 400 Missing email", async () => {
         const response = await request(app)
             .post("/auth/signup")
             .send({
@@ -29,7 +29,7 @@ describe("Testing Auth Signup", () => {
             });
         assert.equal(response.status, 400);
     });
-    it("Testing 400 Missing Password", async () => {
+    it("Testing 400 Missing password", async () => {
         const response = await request(app)
             .post("/auth/signup")
             .send({
@@ -38,7 +38,7 @@ describe("Testing Auth Signup", () => {
             });
         assert.equal(response.status, 400);
     });
-    it("Testing 400 Missing Name", async () => {
+    it("Testing 400 Missing name", async () => {
         const response = await request(app)
             .post("/auth/signup")
             .send({
@@ -47,7 +47,7 @@ describe("Testing Auth Signup", () => {
             });
         assert.equal(response.status, 400);
     });
-    it("Testing 400 Weak Password", async () => {
+    it("Testing 400 Weak password", async () => {
         const response = await request(app)
             .post("/auth/signup")
             .send({
@@ -57,7 +57,8 @@ describe("Testing Auth Signup", () => {
             });
         assert.equal(response.status, 400);
     });
-    it("Testing 409 User already exist", async () => {
+    it("Testing 409 User already exists", async () => {
+        // signup
         const signupResponse = await request(app)
             .post("/auth/signup")
             .send({
@@ -65,13 +66,15 @@ describe("Testing Auth Signup", () => {
                 email: "devsmachna@email.com",
                 password: "{StrongPassword1}"
             });
-        assert.equal(signupResponse.status, 201);
-        assert.equal(typeof signupResponse.body.id, typeof "string");
+        assert.equal(signupResponse.status, 201, "User not created");
+        assert.equal(typeof signupResponse.body.id, typeof "string", "User ID not a string");
         idUser = signupResponse.body.id;
+        // verify
         const user = await User.findById(idUser);
         const verifyResponse = await request(app)
             .get(`/auth/verify/${user?.verificationCode}`);
-        assert.equal(verifyResponse.status, 200);
+        assert.equal(verifyResponse.status, 200, "User not verified");
+        // signup with already verified credentials
         const newSignupResponse = await request(app)
             .post("/auth/signup")
             .send({
@@ -79,6 +82,110 @@ describe("Testing Auth Signup", () => {
                 email: "devsmachna@email.com",
                 password: "{StrongPassword1}"
             });
-        assert.equal(newSignupResponse.status, 409);
+        assert.equal(newSignupResponse.status, 409, "User with same credential created");
     });
-})
+});
+
+describe("Testing Login", () => {
+    let idUser: string;
+    let loggedUser: string;
+    afterEach("Delete user after test", async () => {
+        await User.findByIdAndDelete(idUser);
+    });
+    it("Testing 200 Successful login", async() => {
+        // signup
+        const signupResponse = await request(app)
+            .post("/auth/signup")
+            .send({
+                name: "DevsMachna",
+                email: "devsmachna@email.com",
+                password: "{StrongPassword1}"
+            });
+        assert.equal(signupResponse.status, 201, "User not created");
+        assert.equal(typeof signupResponse.body.id, typeof "string", "User ID not a string");
+        idUser = signupResponse.body.id;
+        // verify
+        const user = await User.findById(idUser);
+        const verifyResponse = await request(app)
+            .get(`/auth/verify/${user?.verificationCode}`);
+        assert.equal(verifyResponse.status, 200, "User not verified");
+        // login
+        const loginResponse = await request(app)
+            .post("/auth/login")
+            .send({
+                email: "devsmachna@email.com",
+                password: "{StrongPassword1}"
+            });
+        assert.equal(loginResponse.status, 200, "Login failed");
+        loggedUser = loginResponse.body.token;
+    });
+    it("Testing 400 Invalid credential", async () => {
+        // signup
+        const signupResponse = await request(app)
+            .post("/auth/signup")
+            .send({
+                name: "DevsMachna",
+                email: "devsmachna@email.com",
+                password: "{StrongPassword1}"
+            });
+        assert.equal(signupResponse.status, 201, "User not created");
+        assert.equal(typeof signupResponse.body.id, typeof "string", "User ID not a string");
+        idUser = signupResponse.body.id;
+        // verify
+        const user = await User.findById(idUser);
+        const verifyResponse = await request(app)
+            .get(`/auth/verify/${user?.verificationCode}`);
+        assert.equal(verifyResponse.status, 200, "User not verified");
+        // login
+        const loginResponse = await request(app)
+            .post("/auth/login")
+            .send({
+                email: "devsmachna@email.com",
+                password: "{WrongPassword1}"
+            });
+        assert.equal(loginResponse.status, 400, "Login success");
+    });
+    it("Testing 404 User not found when change name", async () => {
+        const response = await request(app)
+            .patch("/me")
+            .set("token", loggedUser)
+            .send({
+                name: "Deus"
+            });
+        assert.equal(response.status, 404);
+    });
+    it("Testing 200 Successful change name", async () => {
+        // signup
+        const signupResponse = await request(app)
+            .post("/auth/signup")
+            .send({
+                name: "DevsMachna",
+                email: "devsmachna@email.com",
+                password: "{StrongPassword1}"
+            });
+        assert.equal(signupResponse.status, 201, "User not created");
+        assert.equal(typeof signupResponse.body.id, typeof "string", "User ID not a string");
+        idUser = signupResponse.body.id;
+        // verify
+        const user = await User.findById(idUser);
+        const verifyResponse = await request(app)
+            .get(`/auth/verify/${user?.verificationCode}`);
+        assert.equal(verifyResponse.status, 200, "User not verified");
+        // login
+        const loginResponse = await request(app)
+            .post("/auth/login")
+            .send({
+                email: "devsmachna@email.com",
+                password: "{StrongPassword1}"
+            });
+        assert.equal(loginResponse.status, 200, "Login failed");
+        // chnage name
+        const patchResponse = await request(app)
+            .patch("/auth/me")
+            .set("token", loginResponse.body.token.trim())
+            .send({
+                name: "Dev"
+            });
+        assert.equal(patchResponse.status, 200, "Name not changed");
+    });
+});
