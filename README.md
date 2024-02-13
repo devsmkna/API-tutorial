@@ -1,6 +1,6 @@
-# How to make an API with typescript, Mongo DB Atlas and Express
+# How to make an API with typescript, Mongo DB Atlas, and Express
 
-After download this project you can run it with:
+After downloading this project you can run it with the following:
 ```bash
 npm i
 npm start
@@ -10,7 +10,7 @@ npm start
 
 ### 1.1 Setup project
 
-Create the project directory and setup **npm**:
+Create the project directory and set **npm**:
 ```bash
 mkdir project-directory && cd project-directory
 npm init -y
@@ -30,6 +30,7 @@ npm i mongoose && npm i --save-dev @types/mongoose
 npm i bcrypt && npm i --save-dev @types/bcrypt
 npm i uuid && npm i --save-dev @types/uuid
 npm i dotenv && npm i --save-dev @types/dotenv
+npm i supertest && npm i --save-dev @types/supertest
 ```
 
 Create the **directories** for typescript and javascript files:
@@ -52,12 +53,12 @@ On `package.json` under **script** add the following lines:
 
 ### 1.2 Setup MongoDB Atlas
 
-1. Go on `https://account.mongodb.com/account/login` to Sign-in or Sign-up to your MongoDB account.
+1. Go to `https://account.mongodb.com/account/login` to Sign-in or Sign-up to your MongoDB account.
 2. In the side menu go to `Database`, then click on `Connect`, in the pop-up select `Drivers`.
 3. In the drop-down menu `Node.js` must be the selected voice.
-4. Copy the server url *(something likes `mongo+srv://...`)*
+4. Copy the server URL *(something likes `mongo+srv://...`)*
 
-On `.env` create **environment variables** paste the server url:
+On `.env` create **environment variables** and paste the server URL:
 ```.env
 DBURL=mongo+srv://...
 PORT=3000
@@ -66,7 +67,7 @@ JWT_SECRET=shhhh
 
 ## 2. Create API
 
-### 2.1 Create app
+### 2.1 Create application
 
 On `src/app.ts`:
 ```ts
@@ -91,7 +92,7 @@ app.listen(process.env.PORT,
 
 ### 2.2 Create models
 
-Create on `src` the folder `models`. In this folder create a file for each MongoDB models. For example:
+Create a `models` directory in the folder `src`. In this folder create a file for each MongoDB model. For example:
 
 `src/models/Company.ts`
 ```ts
@@ -123,7 +124,7 @@ export default model<Company>("Company", schema);
 
 ### 2.3 Create middleware
 
-Create on `src` the folder `middlewares`. In this folder create the middleware, such as:
+Create a `middlewares` directory in the folder `src`. In this folder create the middleware, such as:
 
 `src/middlewares/validations.ts`
 ```ts
@@ -148,7 +149,7 @@ export const auth = (req: Request, res: Response, next: NextFunction) => {
 ```
 ### 2.4 Create routes
 
-Create on `src` the folder `routes`. In this folder create the route for group of endpoints. For example:
+Create a `routes` directory in the folder `routes`. In this folder create the route for a group of endpoints. For example:
 
 `src/routes/companies.ts`
 ```ts
@@ -241,7 +242,7 @@ At the end of the file export the router:
 export default router;
 ```
 
-### 2.5 Connect route to main app
+### 2.5 Connect route to the main app
 
 On `src/app.ts`:
 ```ts
@@ -252,7 +253,7 @@ app.use("/companies", companies);
 
 ### 2.6 Create an auth route
 
-Create on `src/routes` the file `auth.ts` with this imports:
+Create `auth.ts` file in the directory `src/routes` with these imports:
 ```ts
 import bcrypt from "bcrypt";
 import { User } from "../models/User";
@@ -358,7 +359,7 @@ router.post(
 
 ## 3. Create test
 
-Create on `src` the folder `tests`. In this folder you will test the endpoints beheviours. For example:
+Create a `tests` directory in the folder `src`. In this folder, you will test the endpoints' behaviors. For example:
 
 `src/tests/auth.ts`
 ```ts
