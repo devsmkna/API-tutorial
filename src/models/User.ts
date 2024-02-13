@@ -6,6 +6,7 @@ type User = {
     password: string,
     verifyed: boolean,
     verificationCode?: string,
+    resetPasswordCode?: string,
     avatar?: string
 }
 
@@ -29,6 +30,9 @@ const userSchema = new Schema<User>({
         default: false
     },
     verificationCode: {
+        type: String
+    },
+    resetPasswordCode: {
         type: String
     },
     avatar: {

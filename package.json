@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "test": "set NODE_ENV=test && npm run build && mocha build/tests/*",
+    "test": "set NODE_ENV=test && npm run build && mocha build/tests/*.js",
     "start": "set NODE_ENV=stage && npm run build && node build/index.js",
     "start:cloud": "set NODE_ENV=cloud && npm run build && node build/index.js"
   },

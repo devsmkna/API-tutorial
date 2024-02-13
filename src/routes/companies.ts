@@ -10,8 +10,7 @@ const router = Router();
 router.get(
     "/", 
     async (req: Request, res: Response) => {
-        const company = await Company.find();
-        res.send(company);
+        return res.send(await Company.find());
 });
 
 // get company by id
@@ -21,8 +20,8 @@ router.get(
     checkValidation,
     async (req: Request, res: Response) => {
         const company = await Company.findById(req.params.id);
-        if (!company) return res.status(404).json({ message: "Company not found" });
-        res.json(company);
+        if (!company) return res.status(404).json({ error: "Company not found" });
+        return res.json(company);
 });
 
 // delete company by id
@@ -33,8 +32,8 @@ router.delete(
     async (req: Request, res: Response) => {
         await Company.findByIdAndDelete(req.params.id);
         const company = await Company.findById(req.params.id);
-        if (company) return res.status(404).json({ message: "Company not found" });
-        res.json({ message: "Company deleted" });
+        if (company) return res.status(404).json({ error: "Company not found" });
+        return res.json({ message: "Company deleted" });
 });
 
 // update company
@@ -52,8 +51,8 @@ router.patch(
     async (req: Request, res: Response) => {
         await Company.findByIdAndUpdate(req.params.id, matchedData(req));
         const company = await Company.findById(req.params.id);
-        if (!company) return res.status(404).json({ message: "Company not found" });
-        res.json({ message: "Company updated" });
+        if (!company) return res.status(404).json({ error: "Company not found" });
+        return res.json({ message: "Company updated" });
 });
 
 // create company
@@ -72,9 +71,9 @@ router.post(
             const company = new Company(matchedData(req));
             if (await Company.findOne({ name: company.name })) return res.status(409).json({ message: "Company already exists" });
             const savedCompany = await company.save();
-            res.json(savedCompany);
+            return res.json(savedCompany);
         } catch (e) {
-            res.status(409).json({ message: e });
+            return res.status(409).json({ error: e });
         }
 });
 

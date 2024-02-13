@@ -12,6 +12,6 @@ export const checkValidation = (req: Request, res: Response, next: NextFunction)
 }
 
 export const auth = (req: Request, res: Response, next: NextFunction) => {
-    res.locals.user = jwt.verify(req.headers.token as string, process.env.JWT_SECRET as string)
+    res.locals.user = jwt.verify(req.headers.authorization as string, process.env.JWT_SECRET as string)
     next();
 }

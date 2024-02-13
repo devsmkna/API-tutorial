@@ -1,127 +1,414 @@
 # How to make an API with typescript, Mongo DB Atlas and Express
 
-**TLTR**: To run this project you need to run first `npm i` and then `npm start`.
+After download this project you can run it with:
+```bash
+npm i
+npm start
+```
 
 ## 1. Setup
 
 ### 1.1 Setup project
-1. Create the project folder
-2. Initialize **npm** with `npm init -y`
-5. Install **express** with `npm i express` and `npm i --save-dev @types/express`
-6. Install **express-validator** with `npm i express-validator` and `npm i --save-dev @types/express-validator`
-7. Create a `src` folder for javascript generated files with `mkdir build`
-8. Create a `build` folder for typescript files with `mkdir src`
-9. Add to `package.json` on `scripts` the line `"start": "npm run build && node --watch ./src/index.js"` (build will be sets later)
-10. Create on `src` the file `index.ts`
 
-### 1.2 Setup typescript
-1. Install **typescript** with `npm i typescript`
-2. Initialize **typescript** compiler with `tsc --init`
-3. Modify `tsconfig.json` on lines `"rootDir": "./src"` and `"outDir": "./build"`
-   1. Remember to uncomment them before saving
-4. Add to `package.json` on `scripts` the line `"build": "tsc"`
+Create the project directory and setup **npm**:
+```bash
+mkdir project-directory && cd project-directory
+npm init -y
+```
 
-### 1.3 Setup database
-1. Go on `https://account.mongodb.com/account/login`, then Sign-in or Login
-2. Create a new database
-3. Go on `Database` voice on side menu
-4. Click on `Connect > Drivers`, then copy the line of step 3 *(something like `mongo+srv://...`)*
-5. Install **mongoose** with `npm i mongoose` and `npm i --save-dev @types/mongoose`
+Install **typescript**:
+```bash
+npm i typescript
+tsc --init
+```
 
-### 1.4 Setup environment file
-1. Create `.env` file
-2. Install **dotenv** with `npm i dotenv` and `npm i --save-dev @types/dotenv`
-3. Open it and write `DBURL=URL`
-   1. URL is the link copied on **step 4** of [1.3 Setup Database](#setup-database)
+Install npm **dependencies**:
+```bash
+npm i express && npm i --save-dev @types/express
+npm i express-validator && npm i --save-dev @types/express-validator
+npm i mongoose && npm i --save-dev @types/mongoose
+npm i bcrypt && npm i --save-dev @types/bcrypt
+npm i uuid && npm i --save-dev @types/uuid
+npm i dotenv && npm i --save-dev @types/dotenv
+```
+
+Create the **directories** for typescript and javascript files:
+```bash
+mkdir src build
+```
+
+On `tsconfig.json` uncomment and **change** lines:
+```json
+"rootDir": "./src",
+...
+"outDir": "./build",
+```
+
+On `package.json` under **script** add the following lines:
+```json
+"build": "tsc",
+"start": "npm run build && node ./build/app.ts"
+```
+
+### 1.2 Setup MongoDB Atlas
+
+1. Go on `https://account.mongodb.com/account/login` to Sign-in or Sign-up to your MongoDB account.
+2. In the side menu go to `Database`, then click on `Connect`, in the pop-up select `Drivers`.
+3. In the drop-down menu `Node.js` must be the selected voice.
+4. Copy the server url *(something likes `mongo+srv://...`)*
+
+On `.env` create **environment variables** paste the server url:
+```.env
+DBURL=mongo+srv://...
+PORT=3000
+JWT_SECRET=shhhh
+```
 
 ## 2. Create API
 
 ### 2.1 Create app
-1. Open `index.ts`
-1. Import **express** with `import express from "express"`
-2. Import **path** with `import path from "path"`
-3. Declare a `const app = express()`
-4. Tell express that you will receive json as body in HTTPResponse with `app.use(express.json())`
-5. Connect the environment file with `require("dotenv").config({ path: path.join(__dirname, "../.env") })`
-6. Start the server with `app.listen(PORT)`
-   1. PORT is the port where your server is listening for request (usually is 3000)
-   2. Remember to keep this line as the last one in the file
 
-### 2.2 Connect MongoDB Atlas
-1. Import **mongoose** with `import mongoose from "mongoose"`
-2. Connect to MongoDB Atlas with `mongoose.connect(process.env.DBURL as string)`
-   1. Use then and catch to add info to your connection and handling connection error
+On `src/app.ts`:
+```ts
+import express from "express";
+import mongoose from "mongoose";
+import path from "path";
 
-### 2.3 Create models
-1. Create on `src` the folder `models`
-2. In this folder create a **new file** for your database model *(looks at `src/models/Companies.ts`)*
-3. Import the useful tools from mongose with `import { Schema, model } from "mongoose"`
-4. Create a typescript type of the structure of your model with `type User`
-5. Create a MongoDB schema with `const userSchema = new Schema<User>(STRUCTURE)`
-   1. User is the typescript type you've created on step 4
-   2. STRUCTURE will match the typescript type, but you'll use the mongoose types and other options like required and unique
-6. Export the model with `export const User = model<User>("User", userSchema)`
+const app = express();
+app.use(express.json());
 
-### 2.4 Create middleware
-1. Create on `src` the folder `middlewares`
-2. In this folder create `validations.ts`
-3. Import **express** useful tools with `import { Request, Response, NextFunction } from "express"`
-4. Import **express-validate** useful tools with `import { validationResult } from "express-validator"`
-5. Create the validation of data function *(looks at `src/middlewares/validations.ts` file)*
+require("dotenv").config({
+   path: path.join(__dirname, "../env")
+});
 
-### 2.5 Create routing
-1. Create on `src` the folder `routes`
-2. In this folder create a **new file** for a group of routing endpoints *(looks at `src/routes/companies.ts`)*
-3. Import **express** and useful tools with `import express, { Request, Response } from "express"`
-4. Import the MongoDB model with `import { Model } from "../models/Model"`
-5. Import **express-validator** useful tolls with `import { body, params, matchedData } from "express-validator"`
-6. Create the router connected with the main app with `const router = express.Router()`
-7. Create all the endpoints you need, some examples:
-   1. Get all companies (verb GET)
-   2. Get company by id (verb GET)
-   3. Delete company by id (verb DELETE)
-   4. Update company by id (verb PATCH)
-   5. Create new company (verb POST)
-8. Export the routing with `export default router`
+mongoose.connect(process.env.DBURL as string)
+   .then(() => console.log("Connected to MongoDB Atlas"))
+   .catch((err) => console.log("Error while connecting to MongoDB Atlas", err));
 
-### 2.6 Connect route to main app
-1. Import route to the main app with `import companies from "./routes/companies"`
-2. Connect to app with `app.use("/companies", companies)`
+app.listen(process.env.PORT,
+   () => console.log("Server listening on port", process.env.PORT));
+```
 
-### 2.7 Create an auth route
-1. Create on `src/routes` the file `auth.ts`
-2. Install **bcrypt** with `npm i bcrypt` and `npm i --save-dev @types/bcrypt` for crypting passwords
-3. Create the endpoint for **signup** (verb POST)
-   1. Get all user info within the body
-   2. Crypt the password with `bcrypt`
-   3. Generate the verify token with `v4`
-      1. Install it with `npm i uuid` and `npm i --save-dev @types/uuid`
-      2. Import **uuid** with `import { v4 } from "uuid"`
-4. Create the endpoint for **email verification** (verb GET)
-   1. Find the user with the same token in the url
-   2. If not verified, verify it
-   3. Change info in db
-5. Create the endpoint for **login** (verb POST)
-   1. Get all user info within the body
-   2. Find the user already verified with same email and same crypted password
+### 2.2 Create models
 
-### 2.8 Create auth middleware
-1. Install **jwt** with `npm i jsonwebtoken` and `npm i --save-dev @types/jsonwebtoken`
-2. Add **jwtSalt** in `.env` file with `JWTSALT="STRING"`
-   1. You can insert your custom string
-3. Open `src/middlewares/validations.ts`
-4. Import **jwt** with `import jwt from "jsonwebtoken"`
-5. Write the auth validation *(looks at `src/middlewares/validations.ts`)*
-6. Open `src/routes/auth.ts`
-7. Import **jwt** with `import jwt from "jsonwebtoken"`
-8. Create the endpoint for view the logged user (verb GET)
-   1. Using postman pass in the header the token of jwt (the encrypted json)
-   2. Use the auth middleware
-   3. Return the logged user
-9. Create the endpoint for change data of the logged user (verb PATCH)
-   1.  Find the user by email from `res.locals.user` and update new data
-   2.  Re-generate the token of jwt (the encrypted json)
+Create on `src` the folder `models`. In this folder create a file for each MongoDB models. For example:
 
-# 3. Start the server
+`src/models/Company.ts`
+```ts
+import { Schema, model } from "mongoose";
 
-Run the project with `npm i` and then `npm start`. *For debugging purpose you can download Postman.*
+type Company = {
+   name: string,
+   established: number,
+   website?: string
+};
+
+const schema = new Schema<Company>({
+   name: {
+      type: String,
+      required: true
+   },
+   established: {
+      type: Number,
+      required: true
+   },
+   website: {
+      type: String,
+      unique: true
+   }
+});
+
+export default model<Company>("Company", schema);
+```
+
+### 2.3 Create middleware
+
+Create on `src` the folder `middlewares`. In this folder create the middleware, such as:
+
+`src/middlewares/validations.ts`
+```ts
+import { Request, Response, NextFunction } from "express";
+import { validationResult } from "express-validator";
+import jwt from "jsonwebtoken";
+
+export const checkValidation = (req: Request, res: Response, next: NextFunction) => {
+   const errors = validationResult(req);
+   if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
+   next();
+}
+
+export const auth = (req: Request, res: Response, next: NextFunction) => {
+   res.locals.user = jwt.verify(
+      req.headers.authorization as string, 
+      process.env.JWT_SECRET as string
+   );
+   next();
+}
+```
+### 2.4 Create routes
+
+Create on `src` the folder `routes`. In this folder create the route for group of endpoints. For example:
+
+`src/routes/companies.ts`
+```ts
+import express, { Request, Response } from "express";
+import { body, params, matchedData } from "express-validator";
+import { Company } from "../models/Company"
+
+const router = express.Router();
+```
+
+Create the endpoint to **get all companies**:
+```ts
+router.get(
+   "/", 
+   async (req: Request, res: Response) => {
+      return res.send(await Company.find());
+});
+```
+
+Create the endpoint to **get a company by id**:
+```ts
+router.get(
+    "/:id",
+    param("id").isMongoId(),
+    checkValidation,
+    async (req: Request, res: Response) => {
+      const company = await Company.findById(req.params.id);
+      if (!company)
+         return res.status(404).json({ message: "Company not found" });
+      return res.json(company);
+});
+```
+
+Create the endpoint to **delete a company by id**
+```ts
+router.delete(
+   "/:id",
+   param("id").isMongoId(),
+   checkValidation,
+   async (req: Request, res: Response) => {
+      await Company.findByIdAndDelete(req.params.id);
+      const company = await Company.findById(req.params.id);
+      if (company)
+         return res.status(404).json({ error: "Company not found" });
+      return res.json({ message: "Company deleted" });
+});
+```
+
+Create the endpoint to **update a company by id**
+```ts
+router.patch(
+   "/:id", 
+   body("name").trim().notEmpty().optional(),
+   body("established").isInt({ gt: 0 }).optional(),
+   body("website").trim().notEmpty().isURL().optional(),
+   param("id").isMongoId(),
+   checkValidation,
+   async (req: Request, res: Response) => {
+      await Company.findByIdAndUpdate(req.params.id, matchedData(req));
+      const company = await Company.findById(req.params.id);
+      if (!company)
+         return res.status(404).json({ error: "Company not found" });
+      return res.json({ message: "Company updated" });
+});
+```
+
+Create the endpoint to **add a new company**
+```ts
+router.post(
+   "/",
+   body("name").trim().notEmpty(),
+   body("established").isInt({ gt: 0 }),
+   body("website").trim().notEmpty().isURL().optional(),
+   checkValidation,
+   async (req: Request, res: Response) => {
+      try {
+         const company = new Company(matchedData(req));
+         if (await Company.findOne({ name: company.name }))
+            return res.status(409).json({ message: "Company already exists" });
+         const savedCompany = await company.save();
+         return res.json(savedCompany);
+      } catch (e) {
+         return res.status(409).json({ error: e });
+      }
+});
+```
+
+At the end of the file export the router:
+```ts
+export default router;
+```
+
+### 2.5 Connect route to main app
+
+On `src/app.ts`:
+```ts
+import companies from "./routes/companies";
+
+app.use("/companies", companies);
+```
+
+### 2.6 Create an auth route
+
+Create on `src/routes` the file `auth.ts` with this imports:
+```ts
+import bcrypt from "bcrypt";
+import { User } from "../models/User";
+import { Router, Request, Response } from "express";
+import { body, param, matchedData } from "express-validator";
+import { v4 } from "uuid";
+import { auth, checkValidation } from "../middlewares/validations";
+```
+
+Create the endpoint for **signup**:
+```ts
+router.post(
+   "/signup",
+   body("name").trim().notEmpty(),
+   body("email").trim().notEmpty().isEmail(),
+   body("password").trim().isStrongPassword({
+      minLength: 6,
+      minLowercase: 1,
+      minUppercase: 1,
+      minNumbers: 1,
+      minSymbols: 1 
+   }),
+   body("avatar").trim().notEmpty().isURL().optional(),
+   checkValidation,
+   async (req: Request, res: Response) => {
+      const userData = matchedData(req);
+      const user = await User.findOne({ email: userData.email }) ||
+         new User({
+            name: userData.name,
+            email: userData.email,
+            password: bcrypt.hashSync(userData.password, salt),
+            verifyed: false,
+         });
+      if (user.verifyed)
+         return res.status(409).json({ error: "User already exists" });
+      try {
+         user.verificationCode = v4();
+         await user.save();
+         return res.status(201).json({
+               message: "User created, check your email to verify your account.",
+               id: user.id
+         });
+      } catch (err) {
+         return res.status(400).json({ error: err });
+      }
+   }
+)
+```
+
+Create endpoint for **email verification**:
+```ts
+router.get(
+   "/verify/:id",
+   param("id").isUUID(),
+   checkValidation,
+   async (req: Request, res: Response) => {
+      const user = await User.findOne({ verificationCode: req.params.id });
+      if (!user)
+         return res.status(404).json({ error: "User not found" });
+      user.verifyed = true;
+      user.verificationCode = undefined;
+      await user.save();
+      return res.json({
+         message: "User verified",
+         id: user.id
+      });
+   }
+)
+```
+
+Create endpoint for **login**:
+```ts
+router.post(
+   "/login",
+   body("email").trim().notEmpty().isEmail(),
+   body("password").trim().isStrongPassword({
+      minLength: 6,
+      minLowercase: 1,
+      minUppercase: 1,
+      minNumbers: 1,
+      minSymbols: 1
+   }),
+   checkValidation,
+   async (req: Request, res: Response) => {
+      const user = matchedData(req);
+      const foundUser = await User.findOne({
+         email: user.email,
+         verifyed: true
+      });
+      if (!foundUser || !bcrypt.compareSync(user.password, foundUser.password))
+         return res.status(400).json({ error: "Invalid credential" });
+      return res.json({
+         message: "User logged in",
+         auth: jwt.sign({
+            email: foundUser.email,
+            name: foundUser.name,
+            avatar: foundUser.avatar
+         }, process.env.JWT_SECRET as string)
+      });
+   }
+)
+```
+
+## 3. Create test
+
+Create on `src` the folder `tests`. In this folder you will test the endpoints beheviours. For example:
+
+`src/tests/auth.ts`
+```ts
+import request from "supertest";
+import app from "../index";
+import { User } from "../models/User";
+import assert from "assert";
+
+describe("Testing Signup", () => {
+   let idUser: string;
+   afterEach("Delete user after test", async () => {
+      await User.findByIdAndDelete(idUser);
+   });
+   it("Testing 200 Successful signup", async () => {
+      const response = await request(app)
+         .post("/auth/signup")
+         .send({
+            name: "DevsMachna",
+            email: "devsmachna@email.com",
+            password: "{StrongPassword1}"
+         });
+      assert.equal(response.status);
+      assert.equal(typeof response.body.id, typeof "string");
+      idUser = response.body.id;
+   });
+   it("Testing 400 Missing email", async () => {
+      const response = await request(app)
+         .post("/auth/signup")
+         .send({
+            name: "DevsMachna",
+            password: "{StrongPassword1}"
+         });
+      assert.equal(response.status, 400);
+   });
+   it("Testing 400 Weak password", async () => {
+      const response = await request(app)
+         .post("/auth/signup")
+         .send({
+            name: "DevsMachna",
+            email: "devsmachna@email.com",
+            password: "1234"
+         });
+      assert.equal(response.status, 400);
+   });
+})
+```
+
+
+## 4. Start the server
+
+```bash
+npm start
+```
